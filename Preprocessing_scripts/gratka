@@ -6,7 +6,6 @@ from datetime import datetime
 from textwrap import wrap
 from langdetect import detect
 
-
 class Preprocessing_Gratka:
     """
         A class used to preprocess offers information from Gratka.pl.
@@ -36,7 +35,6 @@ class Preprocessing_Gratka:
         create_table() -> pd.DataFrame:
             Create final preprocessing table.
         """
-
     def __init__(self, apartment_details, information_types):
         """
         Parameters
@@ -49,29 +47,30 @@ class Preprocessing_Gratka:
         self.apartment_details = apartment_details
         self.information_types = information_types
 
-    def extract_address(self, location_table):
+    def extract_address(self,location_table):
         apartment_details = self.apartment_details
-        prepared_table = []
+        prepared_table=[]
         for i in range(len(apartment_details)):
-            try:
-                prepared_table.append(eval(location_table.str.strip(": ")[i])[0])
-            except:
-                prepared_table.append(None)
+          try:
+            prepared_table.append(eval(location_table.str.strip(": ")[i])[0])
+          except:
+            prepared_table.append(None)
 
         address_table = pd.DataFrame()
         for i in range(len(prepared_table)):
-            column = []
-            row = []
-            try:
-                for key, value in prepared_table[i].items():
-                    column.append(key.strip(':'))
-                    row.append(value)
-            except:
-                row.append(None)
-            df_temp = pd.DataFrame([row], columns=column)
-            address_table = pd.concat([address_table, df_temp], ignore_index=True)
+          column = []
+          row = []
+          try:
+            for key, value in prepared_table[i].items():
+              column.append(key.strip(':'))
+              row.append(value)
+          except:
+            row.append(None)
+          df_temp = pd.DataFrame([row], columns=column)
+          address_table = pd.concat([address_table, df_temp], ignore_index=True)
 
         return address_table
+
 
     def prepare_table_information(self, table: pd.DataFrame) -> pd.DataFrame:
         """Change table information from list to dictionary and create external table from it.
@@ -84,23 +83,25 @@ class Preprocessing_Gratka:
         prepared_tables: pd.DataFrame
             data frame with table information.
         """
-        details = []
+        details =[]
         for index, value in enumerate(table):
-            temp = '--'.join([value[i].strip().strip("\n").replace("\n", ":").replace("::", ":") for i in
-                              range(len(value))]).replace(",,", ",")
+          try:
+            temp = '--'.join([value[i].strip().strip("\n").replace("\n",":").replace("::",":") for i in range(len(value))]).replace(",,",",")
             temp2 = temp.split("--")
             temp2.pop(0)
             details.append([x for x in temp2 if x])
-
+          except:
+            details.append(None)
+          
         prepared_table = []
         params_table = pd.DataFrame()
         for index in range(len(details)):
-            try:
-                list_info = "--".join(details[index]).replace(":", "--").split("--")
-                to_append = dict([x for x in zip(*[iter(list_info)] * 2)])
-                prepared_table.append(to_append)
-            except:
-                prepared_table.append(None)
+          try:
+            list_info = "--".join(details[index]).replace(":","--").split("--")
+            to_append = dict([x for x in zip(*[iter(list_info)]*2)])
+            prepared_table.append(to_append)
+          except:
+              prepared_table.append(None)
         for i in range(len(prepared_table)):
             column = []
             row = []
@@ -113,7 +114,7 @@ class Preprocessing_Gratka:
             df_temp = pd.DataFrame([row], columns=column)
             params_table = pd.concat([params_table, df_temp], ignore_index=True)
 
-        return prepared_table, params_table.where(pd.notnull(params_table), None)
+        return prepared_table, params_table.where(pd.notnull(params_table),None)
 
     def prepare_description_table(self, apartment_details_description_table: pd.DataFrame) -> pd.DataFrame:
         """Split description of 4000 characters to several columns and if record has more than 16000 characters check the language and get only polish description.
@@ -131,45 +132,46 @@ class Preprocessing_Gratka:
         description_3 = []
         description_4 = []
 
+       
+
         for i in range(len(apartment_details_description_table)):
-            desc_list = [None, None, None, None]
-            if apartment_details_description_table[i] == None:
-                description_splitted = None
-            elif len(apartment_details_description_table[i]) > 16000:
+          desc_list = [None, None, None, None]
+          if apartment_details_description_table[i]==None:
+            description_splitted = None
+          elif len(apartment_details_description_table[i]) > 16000:
 
-                description = apartment_details_description_table[i]
-                text = " ".join(description).replace("\xa0", " ").strip()
-                elements = [text[x:x + 6] for x in range(0, len(text), 6)]
+            description = apartment_details_description_table[i]
+            text = " ".join(description).replace("\xa0"," ").strip()
+            elements = [text[x:x+6] for x in range(0, len(text),6)]
 
-                pl = []
-                for index, element in enumerate(elements):
-                    element = list(map(str.lower, element))
-                    try:
-                        language = detect(" ".join(element))
-                    except:
-                        language = 'pl'
-                    if language == 'pl':
-                        pl.append(" ".join(element))
+            pl = []
+            for index, element in enumerate(elements):
+              element = list(map(str.lower,element))
+              try:
+                language = detect(" ".join(element))
+              except:
+                language = 'pl'
+              if language =='pl':
+                pl.append(" ".join(element))
 
-                description_splitted = wrap(" ".join(pl), 4000)
+            description_splitted = wrap(" ".join(pl), 4000)
 
-            else:
-                try:
-                    description_splitted = wrap(
-                        " ".join(apartment_details_description_table[i]).replace("\xa0", " ").strip(), 4000)
-                except:
-                    description_splitted = wrap(''.join(apartment_details_description_table[i]), 4000)
+          else:
+              try:
+                  description_splitted = wrap(" ".join(apartment_details_description_table[i]).replace("\xa0"," ").strip(), 4000)
+              except:
+                  description_splitted = wrap(''.join(apartment_details_description_table[i]), 4000)
 
-            try:
-                for element in range(len(description_splitted)):
-                    desc_list[element] = description_splitted[element]
-            except:
-                desc_list[element] = None
+          try:
+            for element in range(len(description_splitted)):
+              desc_list[element] = description_splitted[element]
+          except:
+            desc_list[element] = None
 
-            description_1.append(desc_list[0])
-            description_2.append(desc_list[1])
-            description_3.append(desc_list[2])
-            description_4.append(desc_list[3])
+          description_1.append(desc_list[0])
+          description_2.append(desc_list[1])
+          description_3.append(desc_list[2])
+          description_4.append(desc_list[3])
 
         self.apartment_details['description_2'] = description_2
         self.apartment_details['description_3'] = description_3
@@ -177,59 +179,61 @@ class Preprocessing_Gratka:
 
         return description_1
 
-    def handle_exception(self, table):
-        val = []
-        for i in range(len(table)):
-            try:
-                val.append(table[i])
-            except:
-                val.append(None)
-        return val
+    def handle_exception(self,table):
+      val=[]
+      for i in range(len(table)):
+        try:
+          val.append(table[i])
+        except:
+          val.append(None)
+      return val
 
     def handle_exception_area(self, area_table):
-        area = []
-        for i in range(len(area_table)):
-            try:
-                area.append(float(area_table[i].split()[0].replace(",", ".")))
-            except:
-                area.append(None)
-        return area
+      area=[]
+      for i in range(len(area_table)):
+        try:
+          area.append(float(area_table[i].split()[0].replace(",",".")))
+        except:
+          area.append(None)
+      return area
 
-    def handle_exception_add_info(self, add_info_gratka):
-        add_info = []
-        for i in range(len(add_info_gratka)):
-            try:
-                add_info.append(str(add_info_gratka[i]).strip("{}"))
-            except:
-                add_info.append(None)
-        return add_info
+    def handle_exception_add_info(self,add_info_gratka):
+      add_info =[]
+      for i in range(len(add_info_gratka)):
+        try:
+          add_info.append(str(add_info_gratka[i]).strip("{}"))
+        except:
+          add_info.append(None)
+      return add_info
 
     def handle_exception_price(self, price_table):
-        price = []
-        for i in range(len(price_table)):
-            try:
-                price.append(float(price_table[i].replace(" ", "").replace(",", ".")))
-            except:
-                price.append(None)
-        return price
+      price =[]
+      for i in range(len(price_table)):
+        try:
+          price.append(float(price_table[i].replace(" ","").replace(",",".")))
+        except:
+          price.append(None)
+      return price
 
     def handle_exception_currency(self, currency_table):
-        currency = []
-        for i in range(len(currency_table)):
-            try:
-                currency.append(currency_table[i].split("/")[0])
-            except:
-                currency.append(None)
-        return currency
+      currency =[]
+      for i in range(len(currency_table)):
+        try:
+          currency.append(currency_table[i].split("/")[0])
+        except:
+          currency.append(None)
+      return currency
 
     def handle_exception_title(self, title_table):
-        title = []
-        for i in range(len(title_table)):
-            try:
-                title.append(title_table[i][0])
-            except:
-                title.append(None)
-        return title
+      title =[]
+      for i in range(len(title_table)):
+        try:
+          title.append(title_table[i][0])
+        except:
+          title.append(None)
+      return title
+
+
 
     def create_table(self):
         """Create final preprocessing table.
@@ -239,7 +243,7 @@ class Preprocessing_Gratka:
             final preprocessing table with None instead of empty strings.
         """
         gratka_table = pd.DataFrame()
-        address = self.extract_address(location_table=self.apartment_details['location_params'])
+        address = self.extract_address(location_table = self.apartment_details['location_params'])
         add_info_gratka, params_tables_gratka = self.prepare_table_information(table=self.apartment_details['details'])
         print(add_info_gratka)
         gratka_table["area"] = self.handle_exception_area(area_table=params_tables_gratka["Powierzchnia w m2"])
@@ -252,8 +256,7 @@ class Preprocessing_Gratka:
         gratka_table["floors_number"] = self.handle_exception(table=params_tables_gratka["Liczba pięter w budynku"])
         gratka_table["floor"] = self.handle_exception(table=params_tables_gratka["Piętro"])
         gratka_table["type_building"] = self.handle_exception(table=params_tables_gratka["Typ zabudowy"].str.lower())
-        gratka_table["material_building"] = self.handle_exception(
-            table=params_tables_gratka["Materiał budynku"].str.lower())
+        gratka_table["material_building"] = self.handle_exception(table=params_tables_gratka["Materiał budynku"].str.lower())
         gratka_table["year"] = self.handle_exception(table=params_tables_gratka["Rok budowy"])
         gratka_table["headers"] = None
         gratka_table["additional_info"] = self.handle_exception_add_info(add_info_gratka)
@@ -267,7 +270,7 @@ class Preprocessing_Gratka:
         gratka_table['pageName'] = 'Gratka'
         gratka_table['offer_title'] = self.handle_exception_title(title_table=self.apartment_details.title)
         gratka_table['description_1'] = self.prepare_description_table(self.apartment_details['description'])
-        gratka_table['description_2'] = self.apartment_details['description_2']
+        gratka_table['description_2'] = self.apartment_details['description_2'] 
         gratka_table['description_3'] = self.apartment_details['description_3']
         gratka_table['description_4'] = self.apartment_details['description_4']
         return gratka_table.replace({"": None})
