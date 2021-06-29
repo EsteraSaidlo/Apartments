@@ -245,7 +245,6 @@ class Preprocessing_Gratka:
         gratka_table = pd.DataFrame()
         address = self.extract_address(location_table = self.apartment_details['location_params'])
         add_info_gratka, params_tables_gratka = self.prepare_table_information(table=self.apartment_details['details'])
-        print(add_info_gratka)
         gratka_table["area"] = self.handle_exception_area(area_table=params_tables_gratka["Powierzchnia w m2"])
         gratka_table["latitude"] = self.handle_exception(table=address["lokalizacja_szerokosc-geograficzna-y"])
         gratka_table["longitude"] = self.handle_exception(table=address["lokalizacja_dlugosc-geograficzna-x"])
