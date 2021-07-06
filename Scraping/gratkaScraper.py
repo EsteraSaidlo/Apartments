@@ -282,7 +282,7 @@ class ScrapingGratka(Scraper):
 
             # Details
             details = self.extract_information_gratka(
-                soup_details.find('ul', {'class': 'parameters__rolled'}))
+                soup_details.find('ul', {'class': 'parameters__container'}))
 
             # Description
             description = self.extract_information(self.soup_find_information(soup=soup_details,
