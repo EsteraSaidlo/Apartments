@@ -90,7 +90,7 @@ class Preprocessing_Gratka:
           a =[]
           df = pd.DataFrame.from_dict(value)
           transposed = df.T.reset_index(drop=True)
-          colnames = transposed.iloc[0,:]
+          colnames = transposed.iloc[0,:].str.replace(", "," ")
           df2 = transposed.iloc[1:,:].reset_index(drop=True)
           data1 = pd.DataFrame(df2.values, columns=colnames)
           df1 = pd.concat([df1, data1], axis=0).reset_index(drop=True)
